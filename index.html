@@ -39,11 +39,11 @@ function generateGradient(input){
   }
   ctx.fillStyle = gradient;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText(input, canvas.width/2, canvas.height - 20);
+  ctx.fillText(input, canvas.width/2, canvas.height - 60);
 }
 
 btn.addEventListener('click', ()=>{
