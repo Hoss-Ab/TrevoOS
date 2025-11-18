@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smooth Gradient Wallpaper Generator</title>
+<title>Dark Fade Wallpaper Generator</title>
 <style>
-  body {margin:0;padding:0;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; background:#111; color:white;}
-  h1 {margin-bottom:20px;}
-  input {padding:10px 14px; border-radius:8px; border:none; margin-bottom:10px; width:220px;}
+  body {margin:0;padding:40px 0;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align:center; background:#0b0b0b; color:white;}
+  h1 {margin-bottom:10px;}
+  p {max-width:300px;margin:0 auto 20px auto;line-height:1.4;}
+  input {padding:10px 14px; border-radius:8px; border:none; margin-bottom:10px; width:240px; text-align:center;}
   button {padding:10px 14px; border:none; border-radius:8px; background:#ff6e0a; color:white; cursor:pointer; font-weight:600;}
-  canvas {margin-top:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:300px; height:600px;}
+  canvas {margin-top:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:300px; height:600px;}
 </style>
 </head>
 <body>
-<h1>Smooth Gradient Wallpaper Generator</h1>
-<input type="text" id="userInput" placeholder="Enter your name or number">
+<h1>Dark Fade Wallpaper Generator</h1>
+<p>This site creates a dark gradient wallpaper with your text at the bottom. Each wallpaper is random and can mix between two and four colors with soft fading.</p>
+<input type="text" id="userInput" placeholder="Enter text">
 <button id="generateBtn">Generate Wallpaper</button>
 <canvas id="wallCanvas" width="300" height="600"></canvas>
 <script>
@@ -22,24 +24,26 @@ const canvas = document.getElementById('wallCanvas');
 const ctx = canvas.getContext('2d');
 const btn = document.getElementById('generateBtn');
 
+function randomDarkColor(){
+  const h = Math.floor(Math.random()*360);
+  const s = 50;
+  const l = 25 + Math.random()*10;
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
 function generateGradient(input){
-  // create two colors based on input
-  let hash = 0;
-  for(let i=0;i<input.length;i++) hash = input.charCodeAt(i) + ((hash<<5)-hash);
-  const color1 = `hsl(${hash%360}, 70%, 50%)`;
-  const color2 = `hsl(${(hash+180)%360}, 70%, 50%)`;
-  const gradient = ctx.createLinearGradient(0,0,0,canvas.height);
-  gradient.addColorStop(0,color1);
-  gradient.addColorStop(1,color2);
+  const count = Math.floor(Math.random()*3) + 2;
+  const gradient = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+  for(let i=0;i<count;i++){
+    gradient.addColorStop(i/(count-1), randomDarkColor());
+  }
   ctx.fillStyle = gradient;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  // add text in center
-  ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(input, canvas.width/2, canvas.height/2);
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(input, canvas.width/2, canvas.height - 20);
 }
 
 btn.addEventListener('click', ()=>{
