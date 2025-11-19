@@ -32,6 +32,55 @@ function randomDarkColor(){
 }
 
 function generateGradient(input){
+  const mode = Math.floor(Math.random()*4);
+  if(mode===0){
+    const count = Math.floor(Math.random()*3)+2;
+    const g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    for(let i=0;i<count;i++) g.addColorStop(i/(count-1), randomDarkColor());
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  if(mode===1){
+    const g = ctx.createRadialGradient(canvas.width/2,canvas.height/2,10,canvas.width/2,canvas.height/2,400);
+    g.addColorStop(0, randomDarkColor());
+    g.addColorStop(1, randomDarkColor());
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  if(mode===2){
+    const g = ctx.createLinearGradient(0,0,canvas.width,0);
+    g.addColorStop(0, randomDarkColor());
+    g.addColorStop(1, randomDarkColor());
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  if(mode===3){
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0, randomDarkColor());
+    g.addColorStop(1, randomDarkColor());
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<40;i++){
+      ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.1})`;
+      ctx.fillRect(Math.random()*300, Math.random()*600, 20, 20);
+    }
+  }
+  ctx.font = '50px "Ink Free"';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  let text = input;
+if(text.length > 12){
+  ctx.font = '34px "Ink Free"';
+}
+if(text.length > 20){
+  ctx.font = '28px "Ink Free"';
+}
+if(text.length > 28){
+  ctx.font = '24px "Ink Free"';
+}
+ctx.fillText(text, canvas.width/2, canvas.height - 60);
+}(input){
   const count = Math.floor(Math.random()*3) + 2;
   const gradient = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
   for(let i=0;i<count;i++){
