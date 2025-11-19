@@ -7,10 +7,10 @@
 <style>
   body {margin:0;padding:40px 0;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align:center; background:#0b0b0b; color:white;}
   h1 {margin-bottom:10px;}
-  p {max-width:300px;margin:0 auto 20px auto;line-height:1.4;}
-  input {padding:10px 14px; border-radius:8px; border:none; margin-bottom:10px; width:240px; text-align:center;}
+  p {max-width:360px;margin:0 auto 20px auto;line-height:1.4;}
+  input {padding:10px 14px; border-radius:8px; border:none; margin-bottom:10px; width:260px; text-align:center;}
   button {padding:10px 14px; border:none; border-radius:8px; background:#ff6e0a; color:white; cursor:pointer; font-weight:600;}
-  canvas {margin-top:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:300px; height:600px;}
+  canvas {margin-top:25px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.6); width:300px; height:600px; display:block; margin-left:auto; margin-right:auto;}
 </style>
 </head>
 <body>
@@ -19,86 +19,143 @@
 <input type="text" id="userInput" placeholder="Enter text">
 <button id="generateBtn">Generate Wallpaper</button>
 <canvas id="wallCanvas" width="300" height="600"></canvas>
+
 <script>
 const canvas = document.getElementById('wallCanvas');
 const ctx = canvas.getContext('2d');
 const btn = document.getElementById('generateBtn');
 
+// helper to pick a dark color
 function randomDarkColor(){
   const h = Math.floor(Math.random()*360);
-  const s = 50;
-  const l = 25 + Math.random()*10;
+  const s = 50 + Math.floor(Math.random()*20);
+  const l = 18 + Math.random()*12; // keep dark
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+// draw text with wrapping and bottom alignment using Ink Free font if available
+function drawWrappedText(text){
+  // prefer Ink Free then fallbacks
+  let fontSize = 50;
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.textAlign = 'center';
+  const maxWidth = canvas.width - 40;
+  // reduce size for long strings
+  if(text.length > 28) fontSize = 24;
+  else if(text.length > 20) fontSize = 30;
+  else if(text.length > 12) fontSize = 36;
+  ctx.font = `${fontSize}px "Ink Free", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  // if fits on one line, draw single line
+  if(ctx.measureText(text).width <= maxWidth){
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(text, canvas.width/2, canvas.height - 40);
+    return;
+  }
+  // otherwise break into words
+  const words = text.split(' ');
+  const lines = [];
+  let current = words[0] || '';
+  for(let i=1;i<words.length;i++){
+    const w = words[i];
+    const test = current + ' ' + w;
+    if(ctx.measureText(test).width <= maxWidth){
+      current = test;
+    } else {
+      lines.push(current);
+      current = w;
+    }
+  }
+  if(current) lines.push(current);
+  // if still too wide because no spaces, reduce font until fits
+  while(lines.some(l => ctx.measureText(l).width > maxWidth) && fontSize > 12){
+    fontSize -= 2;
+    ctx.font = `${fontSize}px "Ink Free", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  }
+  const lineHeight = fontSize * 1.1;
+  // draw from bottom upwards
+  ctx.textBaseline = 'alphabetic';
+  let startY = canvas.height - 40 - (lines.length - 1) * lineHeight;
+  for(let i=0;i<lines.length;i++){
+    ctx.fillText(lines[i], canvas.width/2, startY + i * lineHeight);
+  }
+}
+
+// main generator with multiple random modes
 function generateGradient(input){
-  const mode = Math.floor(Math.random()*4);
-  if(mode===0){
-    const count = Math.floor(Math.random()*3)+2;
-    const g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-    for(let i=0;i<count;i++) g.addColorStop(i/(count-1), randomDarkColor());
+  // clear
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const mode = Math.floor(Math.random()*5); // 0..4
+  if(mode === 0){
+    // vertical multi stop
+    const count = Math.floor(Math.random()*3) + 2;
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
+    for(let i=0;i<count;i++){
+      g.addColorStop(i/(count-1), randomDarkColor());
+    }
     ctx.fillStyle = g;
     ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-  if(mode===1){
-    const g = ctx.createRadialGradient(canvas.width/2,canvas.height/2,10,canvas.width/2,canvas.height/2,400);
+  } else if(mode === 1){
+    // radial spotlight
+    const g = ctx.createRadialGradient(canvas.width/2, canvas.height/3, 10, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
     g.addColorStop(0, randomDarkColor());
     g.addColorStop(1, randomDarkColor());
     ctx.fillStyle = g;
     ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-  if(mode===2){
+  } else if(mode === 2){
+    // horizontal gradient
     const g = ctx.createLinearGradient(0,0,canvas.width,0);
-    g.addColorStop(0, randomDarkColor());
-    g.addColorStop(1, randomDarkColor());
+    const count = Math.floor(Math.random()*3) + 2;
+    for(let i=0;i<count;i++){
+      g.addColorStop(i/(count-1), randomDarkColor());
+    }
     ctx.fillStyle = g;
     ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-  if(mode===3){
+  } else if(mode === 3){
+    // diagonal gradient
+    const g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    const count = Math.floor(Math.random()*3) + 2;
+    for(let i=0;i<count;i++){
+      g.addColorStop(i/(count-1), randomDarkColor());
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  } else {
+    // vertical with subtle noise texture
     const g = ctx.createLinearGradient(0,0,0,canvas.height);
     g.addColorStop(0, randomDarkColor());
     g.addColorStop(1, randomDarkColor());
     ctx.fillStyle = g;
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    for(let i=0;i<40;i++){
-      ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.1})`;
-      ctx.fillRect(Math.random()*300, Math.random()*600, 20, 20);
+    // soft noise
+    ctx.globalAlpha = 0.08;
+    for(let i=0;i<3000;i++){
+      ctx.fillStyle = 'black';
+      const x = Math.random()*canvas.width;
+      const y = Math.random()*canvas.height;
+      ctx.fillRect(x, y, 1, 1);
     }
+    ctx.globalAlpha = 1;
   }
-  ctx.font = '50px "Ink Free"';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  let text = input;
-if(text.length > 12){
-  ctx.font = '34px "Ink Free"';
-}
-if(text.length > 20){
-  ctx.font = '28px "Ink Free"';
-}
-if(text.length > 28){
-  ctx.font = '24px "Ink Free"';
-}
-ctx.fillText(text, canvas.width/2, canvas.height - 60);
-}(input){
-  const count = Math.floor(Math.random()*3) + 2;
-  const gradient = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-  for(let i=0;i<count;i++){
-    gradient.addColorStop(i/(count-1), randomDarkColor());
-  }
-  ctx.fillStyle = gradient;
+
+  // optional soft overlay light or vignette to make text pop
+  // vignette
+  const vg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vg;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(input, canvas.width/2, canvas.height - 60);
+
+  // draw the text at bottom with wrapping
+  drawWrappedText(input);
 }
 
 btn.addEventListener('click', ()=>{
-  const input = document.getElementById('userInput').value || 'Default';
+  const input = document.getElementById('userInput').value.trim() || 'Default';
   generateGradient(input);
 });
+
+// generate one on load
+generateGradient('Default');
 </script>
 </body>
 </html>
